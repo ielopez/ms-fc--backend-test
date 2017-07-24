@@ -9,9 +9,9 @@ import com.scmspain.entities.Tweet;
 
 public interface TweetRepository extends JpaRepository<Tweet, Long> {
 
-	List<Tweet> findWhereDiscardedDateNotNullByOrderByDiscardedTweetDiscardDateTimeDesc();
+	List<Tweet> findByDiscardDateIsNotNullOrderByDiscardDateDesc();
 
-	@Query("SELECT T FROM Tweet T WHERE T.pre2015MigrationStatus != 99 ORDER BY ID DESC")
+	@Query("SELECT T FROM Tweet T WHERE T.pre2015MigrationStatus != 99 and T.discardDate IS NULL ORDER BY ID DESC")
 	List<Tweet> findAllTweets();
 
 }

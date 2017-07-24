@@ -1,5 +1,6 @@
 package com.scmspain.persistence;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.Assert;
@@ -20,7 +21,7 @@ public class TweetRepositoryTest {
 	private TweetRepository tweetRepository;
 	
 	@Test	
-	public void saveSingleTweet(){
+	public void testSaveSingleTweetShouldPersistTheTweet(){
 		Tweet tweet = getTweet();
 		tweetRepository.save(tweet);
 		Assert.assertTrue("This tweet should have an ID already", tweet.getId()!=null);
@@ -28,7 +29,7 @@ public class TweetRepositoryTest {
 	
 	
 	@Test
-	public void findByIdShouldReturnMatchingIdTweet(){
+	public void testFindByIdShouldReturnMatchingIdTweet(){
 		Tweet tweet = getTweet();
 		tweetRepository.save(tweet);
 		Tweet saved = tweetRepository.findOne(tweet.getId());
@@ -36,7 +37,7 @@ public class TweetRepositoryTest {
 	}
 	
 	@Test
-	public void findWherePre2015MigrationIsNot99(){
+	public void testFindAllPostMigrationTweetsShouldNotRetrieveTweetWithPostMigrationStatus99(){
 		Tweet normalTweet = getTweet();
 		tweetRepository.save(normalTweet);
 		List<Tweet> everyTweet = tweetRepository.findAll();
@@ -48,6 +49,23 @@ public class TweetRepositoryTest {
 		
 	}
 	
+	@Test
+	public void testDiscardTweetShouldRetrieveDiscardedTweetsInDescendingOrder(){
+		Tweet firstTweet = getTweet();
+		firstTweet.setDiscardDate(LocalDateTime.now());
+		tweetRepository.save(firstTweet);
+		
+		Tweet secondTweet = getTweet();
+		secondTweet.setDiscardDate(LocalDateTime.now());
+		tweetRepository.save(secondTweet);
+		
+		Tweet thirdTweet = getTweet();
+		tweetRepository.save(thirdTweet);
+		
+		
+		List<Tweet> discardedTweets = tweetRepository.findByDiscardDateIsNotNullOrderByDiscardDateDesc();
+		Assert.assertEquals("The first discarded tweet should be the most recently discarded one", secondTweet.getId(), discardedTweets.get(0).getId());
+	}
 	
 	private Tweet getTweet(){
 		Tweet tweet = new Tweet();
@@ -56,5 +74,6 @@ public class TweetRepositoryTest {
 		
 		return tweet;
 	}
+	
 
 }

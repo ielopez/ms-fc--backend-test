@@ -40,7 +40,7 @@ public class TweetRepositoryTest {
 	public void testFindAllPostMigrationTweetsShouldNotRetrieveTweetWithPostMigrationStatus99(){
 		Tweet normalTweet = getTweet();
 		tweetRepository.save(normalTweet);
-		List<Tweet> everyTweet = tweetRepository.findAll();
+		List<Tweet> everyTweet = tweetRepository.findAllTweets();
 		Tweet badTweet = getTweet();
 		badTweet.setPre2015MigrationStatus(99L);
 		tweetRepository.save(badTweet);

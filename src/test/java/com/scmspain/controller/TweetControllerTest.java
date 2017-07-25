@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 
 import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,7 +24,7 @@ import org.springframework.web.context.WebApplicationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scmspain.configuration.TestConfiguration;
 import com.scmspain.controller.command.DiscardTweetCommand;
-import com.scmspain.entities.Tweet;
+import com.scmspain.services.dto.TweetDto;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
@@ -38,6 +39,7 @@ public class TweetControllerTest {
     @Before
     public void setUp() {
         this.mockMvc = webAppContextSetup(this.context).build();
+        newTweet("Wally", "Hi Mr. Wood!");
     }
 
     @Test
@@ -88,10 +90,8 @@ public class TweetControllerTest {
     @Test
     public void shouldReturn200DiscardTweet() throws Exception{
     	mockMvc.perform(newTweet("Somebody", "Some discardable tweet"));    	
-    	List<Tweet> tweets = this.getAllTweets();
-    	
     	DiscardTweetCommand command = new DiscardTweetCommand();
-    	command.setTweet(tweets.get(0).getId());
+    	command.setTweet(this.getAllTweets().get(0).getId());
     	String json = objectMapper.writeValueAsString(command);
     	mockMvc.perform(post("/discard")
     			.contentType(MediaType.APPLICATION_JSON)
@@ -100,10 +100,10 @@ public class TweetControllerTest {
     }
     
     @Test
-    public void shouldReturnAllDiscardedTweets() throws Exception {
+    public void shouldReturn200AllDiscardedTweets() throws Exception {
         mockMvc.perform(newTweet("Yo", "How are you?"));
 
-       List<Tweet> tweets = this.getAllTweets();
+       List<TweetDto> tweets = this.getAllTweets();
         DiscardTweetCommand command = new DiscardTweetCommand();
         Long originalId = tweets.get(0).getId();
         command.setTweet(originalId);
@@ -118,19 +118,62 @@ public class TweetControllerTest {
                  .andReturn();
         
     }
+    
+    @Test
+    public void shouldReturn400WhenDiscardingTweetsTwice() throws Exception{
+    	DiscardTweetCommand command = new DiscardTweetCommand();
+    	command.setTweet(getAllTweets().get(0).getId());
+    	MockHttpServletRequestBuilder request = post("/discard")
+													.contentType(MediaType.APPLICATION_JSON)
+													.content(objectMapper.writeValueAsString(command));
+    	mockMvc.perform(request).andExpect(status().isOk());
+    	mockMvc.perform(request).andExpect(status().is(400));
+    }
+    
+    @Test
+    public void shouldReturn200AndRetrieveTheMatchingItem() throws Exception{
+    	mockMvc.perform(newTweet("Yo", "How are you?"));
+    	Long id = getAllTweets().get(0).getId();
+    	MvcResult result = mockMvc.perform(get("/tweet/"+id))
+					        .andExpect(status().is(200))
+					        .andReturn();
+    	String content = result.getResponse().getContentAsString();
+  		TweetDto tweet = objectMapper.readValue(content, TweetDto.class);
+  		
+  		Assert.assertEquals("The retrieved object should match the requested ID", id, tweet.getId());
+    	
+    }
+    
+    @Test
+    public void shouldReturn400WhenRetrievingNonExistingTweet() throws Exception{
+    	mockMvc.perform(get("/tweet/"+0L))
+        .andExpect(status().is(400))
+        .andReturn();
+    }
 
+    /**
+     * Posts a new tweet with the desired content
+     * @param publisher The publisher
+     * @param tweet The text of the tweet.
+     * @return A request to publish a tweet.
+     */
     private MockHttpServletRequestBuilder newTweet(final String publisher, final String tweet) {
         return post("/tweet")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .content(format("{\"publisher\": \"%s\", \"tweet\": \"%s\"}", publisher, tweet));
     }
     
-    private List<Tweet> getAllTweets() throws Exception{
+    /**
+     * Retrieves all tweets and parses the JSON Response as a list.
+     * @return The list of tweets from the response-
+     * @throws Exception
+     */
+    private List<TweetDto> getAllTweets() throws Exception{
     	MvcResult getResult = mockMvc.perform(get("/tweet"))
                 .andReturn();
 
         String content = getResult.getResponse().getContentAsString();
-		List<Tweet> tweets = objectMapper.readValue(content, objectMapper.getTypeFactory().constructCollectionType(List.class, Tweet.class));
+		List<TweetDto> tweets = objectMapper.readValue(content, objectMapper.getTypeFactory().constructCollectionType(List.class, TweetDto.class));
 		
 		return tweets;
     }

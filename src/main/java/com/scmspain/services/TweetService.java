@@ -57,6 +57,7 @@ public class TweetService {
     */
     public TweetDto getTweet(Long id) {
       Tweet tweet = this.findTweetById(id);
+      this.metricWriter.increment(new Delta<Number>("times-retrieving-single-tweet", 1));
       return tweetAdapter.toDto(tweet);
       
     }

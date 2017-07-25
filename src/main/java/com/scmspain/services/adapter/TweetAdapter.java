@@ -29,4 +29,8 @@ public class TweetAdapter {
 	public List<TweetDto> toDto(List<Tweet> tweets){
 		return tweets.stream().map(TO_DTO).collect(Collectors.toList());
 	}
+	
+	public TweetDto toDto(Tweet tweet){
+		return TO_DTO.apply(tweet);
+	}
 }

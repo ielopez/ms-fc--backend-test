@@ -1,18 +1,29 @@
 package com.scmspain.configuration;
 
-import com.scmspain.controller.TweetController;
-import com.scmspain.services.TweetService;
-import org.springframework.boot.actuate.metrics.writer.MetricWriter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.persistence.EntityManager;
+import com.scmspain.controller.TweetController;
+import com.scmspain.services.TweetService;
+import com.scmspain.services.TweetValidator;
+import com.scmspain.services.adapter.TweetAdapter;
 
 @Configuration
 public class TweetConfiguration {
+	
+	@Bean 
+	public TweetValidator getTweetValidator(){
+		return new TweetValidator();
+	}
+	
     @Bean
-    public TweetService getTweetService(EntityManager entityManager, MetricWriter metricWriter) {
-        return new TweetService(entityManager, metricWriter);
+    public TweetService getTweetService() {
+        return new TweetService();
+    }
+    
+    @Bean
+    public TweetAdapter getTweetAdapter(){
+    	return new TweetAdapter();
     }
 
     @Bean

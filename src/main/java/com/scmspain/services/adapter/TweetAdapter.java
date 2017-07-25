@@ -20,6 +20,7 @@ public class TweetAdapter {
 			target.setId(source.getId());
 			target.setPublisher(source.getPublisher());
 			target.setTweet(source.getTweet());
+			target.setPre2015MigrationStatus(source.getPre2015MigrationStatus());
 			target.setDiscardDate(source.getDiscardDate());
 			return target;
 		}
